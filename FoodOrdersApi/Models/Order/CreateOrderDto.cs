@@ -6,6 +6,7 @@
 
 
         public int CartId { get; set; }
-        public int UserId { get; set; }
+        public int AccountId { get; set; }
+        public double TotalPrice { get; set; }
     }
 }

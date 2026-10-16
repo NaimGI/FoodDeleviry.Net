@@ -19,5 +19,8 @@
 
         public int OrganizationId { get; set; }
         public int RestaurantId { get; set; }
+
+        // Optional: assign cart to an account
+        public int? AccountId { get; set; }
     }
 }

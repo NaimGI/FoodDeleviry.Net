@@ -30,7 +30,7 @@ namespace FoodOrdersApi.Controllers
         {
             var orderId = _orderService.Create(dto);
 
-            if (orderId == -2) return NotFound($"User with id {dto.UserId} does not exist");
+            if (orderId == -2) return NotFound($"Account with id {dto.AccountId} does not exist");
             if (orderId == -3) return NotFound($"Cart with id {dto.CartId} does not exist");
             if (orderId == -4) return BadRequest($"Can't create an order in a cart of different organization");
 
@@ -82,6 +82,22 @@ namespace FoodOrdersApi.Controllers
         {
             var orderDtos = _orderService.GetFromCart(id);
             return Ok(orderDtos);
+        }
+
+        // GET api/order/account/5
+        [HttpGet("account/{accountId}")]
+        public ActionResult GetByAccount(int accountId)
+        {
+            var orders = _orderService.GetByAccount(accountId);
+            return Ok(orders);
+        }
+
+        // GET api/order/account/5/all
+        [HttpGet("account/{accountId}/all")]
+        public ActionResult GetAllByAccount(int accountId)
+        {
+            var orders = _orderService.GetAllByAccount(accountId);
+            return Ok(orders);
         }
 
         // PUT api/order/update/5

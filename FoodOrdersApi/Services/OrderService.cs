@@ -18,6 +18,12 @@ namespace FoodOrdersApi.Services
         IEnumerable<IndividualOrderDto> GetFromCart(int id);
         int Update(int id, UpdateOrderDto dto);
         int Delete(int id);
+
+        // New: get orders by account id
+        IEnumerable<OrderListDto> GetByAccount(int accountId);
+
+        // New: get all detailed orders by account id
+        IEnumerable<OrderDto> GetAllByAccount(int accountId);
     }
 
     public class OrderService : IOrderService
@@ -38,27 +44,30 @@ namespace FoodOrdersApi.Services
         {
             var order = _mapper.Map<Order>(dto);
 
-            var user = _context.Users.FirstOrDefault(u => u.Id == dto.UserId);
-            if (user == null) return -2;
+            var account = _context.Accounts.FirstOrDefault(u => u.Id == dto.AccountId);
+            if (account == null) return -2;
 
             var cart = _context.Carts
                 .FirstOrDefault(u => u.Id == dto.CartId);
             if (cart == null) return -3;
 
-
             _context.Orders.Add(order);
+
+            // set cart inactive after creating order
+            cart.IsActive = false;
+
             _context.SaveChanges();
             return order.Id;
         }
 
 
-        // Get all carts
+        // Get all orders
         public PagedResult<OrderListDto> GetAll(string filters, int page, string sortBy, SortDirection sortDireciton)
         {
             var baseQuery = _context.Orders
                 .Include(o => o.Cart).ThenInclude(c => c.Restaurant)
                 .Include(o => o.Cart).ThenInclude(c => c.Organization)
-                .Include(o => o.User)
+                .Include(o => o.Account)
                 .Where(o => filters == null || (
                     o.Cart.Restaurant.Name.ToLower().Contains(filters) ||
                     o.Cart.Organization.Name.ToLower().Contains(filters)) ||
@@ -69,7 +78,7 @@ namespace FoodOrdersApi.Services
                 var columnsSelector = new Dictionary<string, Expression<Func<Order, object>>>
                 {
                     { "id", o => o.Id },
-                    { "name", o => new { o.User.FirstName, o.User.LastName }},
+                    { "name", o => o.Account.Login },
                     { "organization", o => o.Cart.Organization.Name},
                     { "restaurant", o => o.Cart.Restaurant.Name},
                     { "totalPrice", o => o.TotalPrice},
@@ -87,18 +96,18 @@ namespace FoodOrdersApi.Services
                 else
                 {
                     baseQuery = sortDireciton == SortDirection.ASC
-                        ? baseQuery.OrderBy(o => o.User.FirstName).ThenBy(o => o.User.LastName)
-                        : baseQuery.OrderByDescending(o => o.User.FirstName).ThenByDescending(o => o.User.LastName);
+                        ? baseQuery.OrderBy(o => o.Account.Login)
+                        : baseQuery.OrderByDescending(o => o.Account.Login);
                 }
             }
 
-            var carts = baseQuery
+            var orders = baseQuery
                 .Skip(10 * (page - 1))
                 .Take(10)
                 .Select(o => new OrderListDto
                 {
                     Id = o.Id,
-                    Name = string.Concat(o.User.FirstName, " ", o.User.LastName),
+                    Name = o.Account.Login,
                     Organization = o.Cart.Organization.Name,
                     Restaurant = o.Cart.Restaurant.Name,
                     Positions = o.Positions,
@@ -109,7 +118,7 @@ namespace FoodOrdersApi.Services
 
             var totalCount = baseQuery.Count();
 
-            var result = new PagedResult<OrderListDto>(carts, totalCount, page);
+            var result = new PagedResult<OrderListDto>(orders, totalCount, page);
 
             return result;
         }
@@ -120,7 +129,7 @@ namespace FoodOrdersApi.Services
         {
             var order = _context.Orders
                 .Include(o => o.MealOrder)
-                .Include(o => o.User)
+                .Include(o => o.Account)
                 .Include(o => o.Cart)
                 .Select(o => new DetailsOrderDto
                 {
@@ -131,7 +140,7 @@ namespace FoodOrdersApi.Services
                     Restaurant = o.Cart.Restaurant.Name,
                     Organization = o.Cart.Organization.Name,
                     Cart = o.CartId,
-                    User = string.Concat(o.User.FirstName, " ", (o.User.SecondName != null ? o.User.SecondName + " " : ""), o.User.LastName)
+                    User = o.Account.Login
                 })
                 .FirstOrDefault(o => o.Id == id);
             if (order == null) return null;
@@ -170,14 +179,14 @@ namespace FoodOrdersApi.Services
                 FirstOrDefault(c => c.Id == id);
 
             var orders = _context.Orders
-                .Include(o => o.User)
+                .Include(o => o.Account)
                 .Where(o => o.CartId == id)
                 .Select(o => new IndividualOrderDto
                 {
                     Id =  o.Id,
                     Positions =  o.Positions,
                     TotalPrice = o.TotalPrice,
-                    User = string.Concat(o.User.FirstName, " ", o.User.LastName)
+                    User = o.Account.Login
                 })
                 .ToList();
             var orderDtos = _mapper.Map<List<IndividualOrderDto>>(orders);
@@ -185,6 +194,41 @@ namespace FoodOrdersApi.Services
             return orderDtos;
         }
 
+        // Get orders by account id
+        public IEnumerable<OrderListDto> GetByAccount(int accountId)
+        {
+            var orders = _context.Orders
+                .Include(o => o.Cart).ThenInclude(c => c.Restaurant)
+                .Include(o => o.Cart).ThenInclude(c => c.Organization)
+                .Include(o => o.Account)
+                .Where(o => o.AccountId == accountId)
+                .Select(o => new OrderListDto
+                {
+                    Id = o.Id,
+                    Name = o.Account.Login,
+                    Organization = o.Cart.Organization.Name,
+                    Restaurant = o.Cart.Restaurant.Name,
+                    Positions = o.Positions,
+                    TotalPrice = o.TotalPrice,
+                })
+                .ToList();
+
+            return _mapper.Map<List<OrderListDto>>(orders);
+        }
+
+        // Get all detailed orders by account id
+        public IEnumerable<OrderDto> GetAllByAccount(int accountId)
+        {
+            var orders = _context.Orders
+                .Include(o => o.MealOrder).ThenInclude(mo => mo.Meal)
+                .Include(o => o.Account)
+                .Include(o => o.Cart).ThenInclude(c => c.Restaurant)
+                .Include(o => o.Cart).ThenInclude(c => c.Organization)
+                .Where(o => o.AccountId == accountId)
+                .ToList();
+
+            return _mapper.Map<List<OrderDto>>(orders);
+        }
 
         // Update order with id
         public int Update(int id, UpdateOrderDto dto)
@@ -197,7 +241,6 @@ namespace FoodOrdersApi.Services
             _context.SaveChanges();
             return order.Id;
         }
-
 
         // Delete order with id
         public int Delete(int id)

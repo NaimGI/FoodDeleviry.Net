@@ -8,6 +8,7 @@ using FoodOrdersApi.Models.Order;
 using FoodOrdersApi.Models.Organization;
 using FoodOrdersApi.Models.Restaurant;
 using FoodOrdersApi.Models.User;
+using FoodOrdersApi.Models.Account;
 
 namespace FoodOrdersApi
 {
@@ -53,10 +54,13 @@ namespace FoodOrdersApi
 
             CreateMap<Restaurant, RestaurantListDto>();
             CreateMap<CreateRestaurantDto, Restaurant>();
+            CreateMap<UpdateRestaurantDto, Restaurant>();
 
             CreateMap<User, UserListDto>();
             CreateMap<User, UserDto>();
             CreateMap<CreateUserDto, User>();
+
+            CreateMap<Account, AccountDto>();
         }
     }
 }

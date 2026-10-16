@@ -19,7 +19,6 @@ namespace FoodOrdersApi.Controllers
 
 
         [HttpPost("register")]
-        [Authorize]
         public ActionResult Register([FromBody] RegisterDto dto)
         {
             _accountService.Register(dto);

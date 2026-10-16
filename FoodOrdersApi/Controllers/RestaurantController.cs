@@ -57,5 +57,15 @@ namespace FoodOrdersApi.Controllers
             if (code == -1) return NotFound($"Retaurant with id {id} does not exist");
             return NoContent();
         }
+
+        // PUT api/restaurant/update/5
+        [HttpPut("update/{id}")]
+        public ActionResult Update(int id, [FromBody] UpdateRestaurantDto dto)
+        {
+            var code = _restaurantService.Update(id, dto);
+
+            if (code == -1) return NotFound($"Retaurant with id {id} does not exist");
+            return Ok($"Restaurant with id {id} has been updated");
+        }
     }
 }

@@ -15,6 +15,7 @@ namespace FoodOrdersApi.Services
         int Create(CreateRestaurantDto dto);
         IEnumerable<RestaurantDto> GetAll();
         PagedResult<RestaurantListDto> GetAllList(int page, string sortBy, SortDirection sortDireciton);
+        int Update(int id, UpdateRestaurantDto dto);
         int Delete(int id);
     }
 
@@ -97,6 +98,19 @@ namespace FoodOrdersApi.Services
             var result = new PagedResult<RestaurantListDto>(restaurants, totalCount, page);
 
             return result;
+        }
+
+        // Update restaurant with id
+        public int Update(int id, UpdateRestaurantDto dto)
+        {
+            var restaurant = _context.Restaurants.FirstOrDefault(o => o.Id == id);
+            if (restaurant == null) return -1;
+
+            restaurant.Name = dto.Name;
+            restaurant.Category = dto.Category;
+
+            _context.SaveChanges();
+            return 1;
         }
 
         // Update restaurant with id

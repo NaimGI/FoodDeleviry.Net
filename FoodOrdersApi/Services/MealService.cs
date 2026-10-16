@@ -133,6 +133,8 @@ namespace FoodOrdersApi.Services
 
             meal.Name = dto.Name ?? meal.Name;
             meal.Description = dto.Description ?? meal.Description;
+            if (dto.Price.HasValue) meal.Price = dto.Price.Value;
+            if (dto.Img != null) meal.Img = dto.Img;
 
             _context.SaveChanges();
             return meal.Id;
@@ -183,6 +185,7 @@ namespace FoodOrdersApi.Services
 
             var mealOrder = _context.MealOrder.FirstOrDefault(mo => mo.OrderId == id && mo.MealId == addRemoveMealOrder.MealId)
                 ?? order.MealOrder.FirstOrDefault(mo => mo.OrderId == id && mo.MealId == addRemoveMealOrder.MealId);
+            if (returns.Count > 0) return returns;
             if (mealOrder != null)
             {
                 mealOrder.Quantity += addRemoveMealOrder.Quantity;

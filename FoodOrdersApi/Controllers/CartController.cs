@@ -18,9 +18,6 @@ namespace FoodCartsApi.Controllers
             _cartService = cartService;
         }
 
-
-
-
         // POST api/cart/create
         [HttpPost("create")]
         public ActionResult Create([FromBody] CreateCartDto dto)
@@ -63,6 +60,14 @@ namespace FoodCartsApi.Controllers
             var cartDto = _cartService.GetCartFromOrganization(id);
 
             return Ok(cartDto);
+        }
+
+        // GET api/cart/account/5
+        [HttpGet("account/{accountId}")]
+        public ActionResult<IEnumerable<CartListDto>> GetCartByAccount(int accountId)
+        {
+            var carts = _cartService.GetByAccount(accountId);
+            return Ok(carts);
         }
 
         // PUT api/cart/update/5

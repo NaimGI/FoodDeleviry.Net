@@ -24,6 +24,7 @@ namespace FoodCartsApi.Services
         IEnumerable<CartFromOrganizationDto> GetCartFromOrganization(int id);
         int Update(int id, UpdateCartDto dto);
         int Delete(int id);
+        IEnumerable<CartListDto> GetByAccount(int accountId);
     }
 
     public class CartService : ICartService
@@ -55,6 +56,7 @@ namespace FoodCartsApi.Services
             //}
 
             cart.TotalCartPrice = 0;
+            cart.IsActive = false; // set active when creating
 
             try
             {
@@ -72,6 +74,7 @@ namespace FoodCartsApi.Services
         // Get all carts
         public PagedResult<CartListDto> GetAll(string filter, int page, string sortBy, SortDirection sortDireciton)
         {
+            page = Math.Max(page, 1);
             var baseQuery = _context.Carts
                 .Include(c => c.Restaurant)
                 .Include(c => c.Organization)
@@ -215,6 +218,28 @@ namespace FoodCartsApi.Services
             _context.Carts.Remove(cart);
             _context.SaveChanges();
             return 1;
+        }
+
+        // Get carts by account id
+        public IEnumerable<CartListDto> GetByAccount(int accountId)
+        {
+            var carts = _context.Carts
+                .Include(c => c.Restaurant)
+                .Include(c => c.Organization)
+                .Where(c => c.AccountId == accountId && !c.IsActive)
+                .Select(c => new CartListDto
+                {
+                    Id = c.Id,
+                    Restaurant = c.Restaurant.Name,
+                    Organization = c.Organization.Name,
+                    TotalCartPrice = c.TotalCartPrice,
+                    MinPrice = c.MinPrice,
+                    DeliveryPrice = c.DeliveryPrice,
+                    FreeDeliveryMinPrice = c.FreeDeliveryMinPrice
+                })
+                .ToList();
+
+            return _mapper.Map<List<CartListDto>>(carts);
         }
 
     }

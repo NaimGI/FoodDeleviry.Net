@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FoodOrdersApi.Entities.Objects
 {
@@ -21,10 +22,10 @@ namespace FoodOrdersApi.Entities.Objects
 
 
 
-        [Required(ErrorMessage = "User is required")]
-        public int UserId { get; set; }
-        public virtual User User { get; set; }
-
+        [Required(ErrorMessage = "Account is required")]
+        [ForeignKey("AccountId")]
+        public int AccountId { get; set; }
+        public virtual Account Account { get; set; }
 
 
         public virtual ICollection<MealOrder> MealOrder { get; set; }

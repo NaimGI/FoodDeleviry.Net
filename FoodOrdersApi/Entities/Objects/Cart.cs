@@ -22,6 +22,8 @@ namespace FoodOrdersApi.Entities.Objects
 
         public string? Note { get; set; }
 
+        // New property to indicate active cart
+        public bool IsActive { get; set; }
 
 
         [Required]
@@ -43,6 +45,11 @@ namespace FoodOrdersApi.Entities.Objects
         public int AddressId { get; set; }
         public virtual Address Address { get; set; }
 
+
+        // Optional relationship to Account (owner of cart)
+        [ForeignKey("AccountId")]
+        public int? AccountId { get; set; }
+        public virtual Account Account { get; set; }
 
 
         public virtual ICollection<Order>? IndividualOrders { get; }
