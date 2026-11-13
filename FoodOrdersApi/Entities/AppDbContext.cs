@@ -16,6 +16,11 @@ namespace FoodOrdersApi.Entities
         public DbSet<User> Users { get; set; }
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Address> Addresses { get; set; }
+        public DbSet<MealCalories> MealCalories { get; set; }
+        public DbSet<DeliveryPricing> DeliveryPricings { get; set; }
+        public DbSet<OrderRating> OrderRatings { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<AppNotification> AppNotifications { get; set; }
 
 
 
@@ -57,6 +62,32 @@ namespace FoodOrdersApi.Entities
 
             modelBuilder.Entity<MealOrder>()
                 .HasKey(mo => new { mo.MealId, mo.OrderId });
+
+            modelBuilder.Entity<MealCalories>()
+                .HasIndex(x => x.MealId)
+                .IsUnique();
+
+            modelBuilder.Entity<OrderRating>()
+                .HasIndex(x => x.OrderId)
+                .IsUnique();
+
+            modelBuilder.Entity<Report>()
+                .HasOne(x => x.Account)
+                .WithMany()
+                .HasForeignKey(x => x.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppNotification>()
+                .HasOne(x => x.DstAccount)
+                .WithMany()
+                .HasForeignKey(x => x.DstAccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppNotification>()
+                .HasOne(x => x.Sender)
+                .WithMany()
+                .HasForeignKey(x => x.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

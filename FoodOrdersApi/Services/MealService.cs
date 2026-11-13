@@ -26,11 +26,15 @@ namespace FoodOrdersApi.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ICalorieEstimatorService _calories;
+        private readonly IOrderPricingService _pricing;
 
-        public MealService(AppDbContext context, IMapper mapper)
+        public MealService(AppDbContext context, IMapper mapper, ICalorieEstimatorService calories, IOrderPricingService pricing)
         {
             _context = context;
             _mapper = mapper;
+            _calories = calories;
+            _pricing = pricing;
         }
 
 
@@ -45,13 +49,16 @@ namespace FoodOrdersApi.Services
 
             _context.Meals.Add(meal);
             _context.SaveChanges();
+            var estimate = _calories.Estimate(meal.Name, meal.Description);
+            _context.MealCalories.Add(new MealCalories { MealId = meal.Id, Calories = estimate.Calories, Explanation = estimate.Explanation, Source = estimate.Source });
+            _context.SaveChanges();
             return meal.Id;
         }
 
         // Get all meal
         public IEnumerable<MealDto> GetAll()
         {
-            var meals = _context.Meals.ToList();
+            var meals = _context.Meals.Include(m => m.Calories).ToList();
             var mealDtos = _mapper.Map<List<MealDto>>(meals);
 
             return mealDtos;
@@ -60,7 +67,7 @@ namespace FoodOrdersApi.Services
         // Get meal by ID
         public MealDto GetByID(int id)
         {
-            var meal = _context.Meals.FirstOrDefault(o => o.Id == id);
+            var meal = _context.Meals.Include(m => m.Calories).FirstOrDefault(o => o.Id == id);
             if (meal == null) return null;
 
             var mealDto = _mapper.Map<MealDto>(meal);
@@ -135,6 +142,11 @@ namespace FoodOrdersApi.Services
             meal.Description = dto.Description ?? meal.Description;
             if (dto.Price.HasValue) meal.Price = dto.Price.Value;
             if (dto.Img != null) meal.Img = dto.Img;
+            if (dto.RestaurantId.HasValue)
+            {
+                if (!_context.Restaurants.Any(r => r.Id == dto.RestaurantId.Value)) return -2;
+                meal.RestaurantId = dto.RestaurantId.Value;
+            }
 
             _context.SaveChanges();
             return meal.Id;
@@ -198,7 +210,8 @@ namespace FoodOrdersApi.Services
             }
             newPrice += newMeal.Price * addRemoveMealOrder.Quantity;
 
-            order.TotalPrice += newPrice;
+            order.Subtotal += newPrice;
+            _pricing.Recalculate(order);
             order.Cart.TotalCartPrice += newPrice;
             _context.SaveChanges();
             return returns;
@@ -254,7 +267,8 @@ namespace FoodOrdersApi.Services
                 order.Positions--;
             }
 
-            order.TotalPrice += newPrice;
+            order.Subtotal += newPrice;
+            _pricing.Recalculate(order);
             order.Cart.TotalCartPrice += newPrice;
             _context.SaveChanges();
             return returns;
