@@ -30,11 +30,13 @@ namespace FoodOrdersApi.Services
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IOrderPricingService _pricing;
 
-        public OrderService(AppDbContext context, IMapper mapper)
+        public OrderService(AppDbContext context, IMapper mapper, IOrderPricingService pricing)
         {
             _context = context;
             _mapper = mapper;
+            _pricing = pricing;
         }
 
 
@@ -51,11 +53,31 @@ namespace FoodOrdersApi.Services
                 .FirstOrDefault(u => u.Id == dto.CartId);
             if (cart == null) return -3;
 
+            order.Subtotal = 0;
+            order.TotalPrice = 0;
+            order.IsPriority = dto.IsPriority;
+            order.IsBadWeather = dto.IsBadWeather;
+            order.Cart = cart;
+            _pricing.Recalculate(order);
+
             _context.Orders.Add(order);
 
             // set cart inactive after creating order
             cart.IsActive = false;
 
+            _context.SaveChanges();
+            _context.AppNotifications.Add(new AppNotification
+            {
+                Type = FoodOrdersApi.Entities.Enum.Notice.NotificationType.RateOrder,
+                Title = "How was your order?",
+                Message = $"Please rate order #{order.Id} after delivery.",
+                DstAccountId = order.AccountId,
+                SenderId = order.AccountId,
+                Time = DateTime.UtcNow,
+                Read = false,
+                OrderId = order.Id,
+                RestaurantId = cart.RestaurantId
+            });
             _context.SaveChanges();
             return order.Id;
         }

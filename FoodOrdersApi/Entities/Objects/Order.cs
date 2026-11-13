@@ -13,6 +13,11 @@ namespace FoodOrdersApi.Entities.Objects
         public int Positions { get; set; }
 
         public string? Notes { get; set; }
+        public double Subtotal { get; set; }
+        public double DeliveryFee { get; set; }
+        public double Tax { get; set; }
+        public bool IsPriority { get; set; }
+        public bool IsBadWeather { get; set; }
 
 
 
@@ -29,5 +34,6 @@ namespace FoodOrdersApi.Entities.Objects
 
 
         public virtual ICollection<MealOrder> MealOrder { get; set; }
+        public virtual OrderRating? Rating { get; set; }
     }
 }

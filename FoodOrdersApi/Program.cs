@@ -106,6 +106,8 @@ namespace FoodOrdersApi
             builder.Services.AddScoped<IOrgService, OrganizationService>();
             builder.Services.AddScoped<IRestaurantService, RestaurantService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IOrderPricingService, OrderPricingService>();
+            builder.Services.AddScoped<ICalorieEstimatorService, CalorieEstimatorService>();
 
             var app = builder.Build();
 

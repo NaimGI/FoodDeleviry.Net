@@ -35,7 +35,8 @@ namespace FoodOrdersApi
                 }));
             CreateMap<UpdateCartDto, Cart>();
 
-            CreateMap<Meal, MealDto>();
+            CreateMap<Meal, MealDto>()
+                .ForMember(d => d.Calories, o => o.MapFrom(s => s.Calories == null ? (double?)null : s.Calories.Calories));
             CreateMap<CreateMealDto, Meal>();
             CreateMap<UpdateMealDto, Meal>();
 

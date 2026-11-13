@@ -87,14 +87,59 @@ namespace FoodOrdersApi.Migrations
                     b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Address", b =>
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.AppNotification", b =>
                 {
-                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
-                        .WithMany("Addresses")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("Account");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DstAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MealId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Read")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("RestaurantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DstAccountId");
+
+                    b.HasIndex("MealId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("AppNotifications");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Cart", b =>
@@ -156,6 +201,30 @@ namespace FoodOrdersApi.Migrations
                     b.ToTable("Carts");
                 });
 
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.DeliveryPricing", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RestaurantId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("DeliveryPricings");
+                });
+
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Meal", b =>
                 {
                     b.Property<int>("Id")
@@ -186,6 +255,36 @@ namespace FoodOrdersApi.Migrations
                     b.HasIndex("RestaurantId");
 
                     b.ToTable("Meals");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.MealCalories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Calories")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MealId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MealId")
+                        .IsUnique();
+
+                    b.ToTable("MealCalories");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.MealOrder", b =>
@@ -222,11 +321,26 @@ namespace FoodOrdersApi.Migrations
                     b.Property<int>("CartId")
                         .HasColumnType("int");
 
+                    b.Property<double>("DeliveryFee")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsBadWeather")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPriority")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Positions")
                         .HasColumnType("int");
+
+                    b.Property<double>("Subtotal")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Tax")
+                        .HasColumnType("float");
 
                     b.Property<double>("TotalPrice")
                         .HasColumnType("float");
@@ -238,6 +352,34 @@ namespace FoodOrdersApi.Migrations
                     b.HasIndex("CartId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.OrderRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("OrderRatings");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Organization", b =>
@@ -255,6 +397,52 @@ namespace FoodOrdersApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Organizations");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Report", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MealId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RestaurantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("MealId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Restaurant", b =>
@@ -307,6 +495,53 @@ namespace FoodOrdersApi.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Address", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
+                        .WithMany("Addresses")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.AppNotification", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "DstAccount")
+                        .WithMany()
+                        .HasForeignKey("DstAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Meal", "Meal")
+                        .WithMany()
+                        .HasForeignKey("MealId");
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId");
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId");
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DstAccount");
+
+                    b.Navigation("Meal");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Restaurant");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Cart", b =>
                 {
                     b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
@@ -341,6 +576,15 @@ namespace FoodOrdersApi.Migrations
                     b.Navigation("Restaurant");
                 });
 
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.DeliveryPricing", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId");
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Meal", b =>
                 {
                     b.HasOne("FoodOrdersApi.Entities.Objects.Restaurant", "Restaurant")
@@ -350,6 +594,17 @@ namespace FoodOrdersApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.MealCalories", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Meal", "Meal")
+                        .WithOne("Calories")
+                        .HasForeignKey("FoodOrdersApi.Entities.Objects.MealCalories", "MealId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meal");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.MealOrder", b =>
@@ -390,6 +645,48 @@ namespace FoodOrdersApi.Migrations
                     b.Navigation("Cart");
                 });
 
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.OrderRating", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Order", "Order")
+                        .WithOne("Rating")
+                        .HasForeignKey("FoodOrdersApi.Entities.Objects.OrderRating", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Report", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Meal", "Meal")
+                        .WithMany()
+                        .HasForeignKey("MealId");
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId");
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Meal");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.User", b =>
                 {
                     b.HasOne("FoodOrdersApi.Entities.Objects.Organization", "Organization")
@@ -403,11 +700,11 @@ namespace FoodOrdersApi.Migrations
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Account", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("Carts");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("Addresses");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Cart", b =>
@@ -417,12 +714,16 @@ namespace FoodOrdersApi.Migrations
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Meal", b =>
                 {
+                    b.Navigation("Calories");
+
                     b.Navigation("MealOrder");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Order", b =>
                 {
                     b.Navigation("MealOrder");
+
+                    b.Navigation("Rating");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Organization", b =>
