@@ -3,6 +3,7 @@ using FoodOrdersApi.Entities.Enum;
 using FoodOrdersApi.Models.Cart;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FoodCartsApi.Controllers
 {
@@ -22,10 +23,17 @@ namespace FoodCartsApi.Controllers
         [HttpPost("create")]
         public ActionResult Create([FromBody] CreateCartDto dto)
         {
+            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var accountId))
+            {
+                return Unauthorized();
+            }
+
+            dto.AccountId = accountId;
             var cartId = _cartService.Create(dto);
 
             if (cartId == -2) return NotFound($"Restaurant with id {dto.RestaurantId} does not exist");
             if (cartId == -3) return NotFound($"Organization with id {dto.OrganizationId} does not exist");
+            if (cartId == -4) return NotFound($"Saved address with id {dto.AddressId} does not exist");
 
             return Ok(new { newCartId = cartId });
         }

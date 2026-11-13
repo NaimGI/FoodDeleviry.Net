@@ -45,15 +45,25 @@ namespace FoodCartsApi.Services
         {
             var cart = _mapper.Map<Cart>(dto);
 
-            //if (!_context.Restaurants.FirstOrDefault(u => u.Id == dto.RestaurantId))
-            //{
-            //    throw new NotFoundException("Restaurant not found");
-            //}
+            if (!_context.Restaurants.Any(r => r.Id == dto.RestaurantId)) return -2;
+            if (!_context.Organizations.Any(o => o.Id == dto.OrganizationId)) return -3;
 
-            //if (!_context.Organizations.FirstOrDefault(u => u.Id == dto.RestaurantId))
-            //{
-            //    throw new NotFoundException("Organization not found");
-            //}
+            if (dto.AddressId.HasValue)
+            {
+                var savedAddress = _context.Addresses.FirstOrDefault(a =>
+                    a.Id == dto.AddressId.Value && a.AccountId == dto.AccountId);
+                if (savedAddress == null) return -4;
+
+                cart.Address = new Address
+                {
+                    Label = savedAddress.Label,
+                    Country = savedAddress.Country,
+                    City = savedAddress.City,
+                    Street = savedAddress.Street,
+                    Building = savedAddress.Building,
+                    Premises = savedAddress.Premises
+                };
+            }
 
             cart.TotalCartPrice = 0;
             cart.IsActive = false; // set active when creating
@@ -147,11 +157,13 @@ namespace FoodCartsApi.Services
                      Address = new AddressDto
                      {
                          Id = c.Address.Id,
+                         Label = c.Address.Label,
                          Country = c.Address.Country,
                          City = c.Address.City,
                          Street = c.Address.Street,
                          Building = c.Address.Building,
-                         Premises = c.Address.Premises
+                         Premises = c.Address.Premises,
+                         IsDefault = c.Address.IsDefault
                      }
                  })
                  .FirstOrDefault(o => o.Id == id);

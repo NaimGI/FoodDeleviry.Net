@@ -17,5 +17,7 @@ namespace FoodOrdersApi.Entities.Objects
 
         // Navigation property: one account can have many orders
         public virtual ICollection<Order> Orders { get; set; }
+
+        public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }

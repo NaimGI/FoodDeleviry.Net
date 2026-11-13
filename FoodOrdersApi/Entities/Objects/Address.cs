@@ -16,5 +16,13 @@ namespace FoodOrdersApi.Entities.Objects
         public string Building { get; set; }
 
         public string? Premises { get; set; }
+
+        [Required]
+        public string Label { get; set; } = "Home";
+
+        public bool IsDefault { get; set; }
+
+        public int? AccountId { get; set; }
+        public virtual Account? Account { get; set; }
     }
 }

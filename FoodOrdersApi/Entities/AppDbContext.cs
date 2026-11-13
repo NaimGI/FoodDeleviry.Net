@@ -63,6 +63,12 @@ namespace FoodOrdersApi.Entities
             modelBuilder.Entity<MealOrder>()
                 .HasKey(mo => new { mo.MealId, mo.OrderId });
 
+            modelBuilder.Entity<Address>()
+                .HasOne(a => a.Account)
+                .WithMany(a => a.Addresses)
+                .HasForeignKey(a => a.AccountId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<MealCalories>()
                 .HasIndex(x => x.MealId)
                 .IsUnique();
