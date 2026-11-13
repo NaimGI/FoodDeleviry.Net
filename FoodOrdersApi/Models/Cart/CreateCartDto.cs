@@ -22,5 +22,7 @@
 
         // Optional: assign cart to an account
         public int? AccountId { get; set; }
+
+        public int? AddressId { get; set; }
     }
 }

@@ -23,8 +23,10 @@ namespace FoodOrdersApi
             CreateMap<Cart, DetailsCartDto>();
             CreateMap<Cart, OrderEditDto>();
             CreateMap<CreateCartDto, Cart>()
+                .ForMember(r => r.AddressId, c => c.Ignore())
                 .ForMember(r => r.Address, c => c.MapFrom(dto => new Address()
                 {
+                    Label = "Delivery",
                     Country = dto.Country,
                     City = dto.City,
                     Street = dto.Street,

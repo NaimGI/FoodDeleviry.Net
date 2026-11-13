@@ -51,6 +51,9 @@ namespace FoodOrdersApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Building")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -63,6 +66,13 @@ namespace FoodOrdersApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Premises")
                         .HasColumnType("nvarchar(max)");
 
@@ -72,7 +82,19 @@ namespace FoodOrdersApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AccountId");
+
                     b.ToTable("Addresses");
+                });
+
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Address", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
+                        .WithMany("Addresses")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Cart", b =>
@@ -384,6 +406,8 @@ namespace FoodOrdersApi.Migrations
                     b.Navigation("Carts");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("Addresses");
                 });
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Cart", b =>
