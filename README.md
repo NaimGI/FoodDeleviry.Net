@@ -52,7 +52,7 @@ The project currently runs locally and does not have a hosted production deploym
 
 ### Backend
 
-The Development environment uses SQLite, so you can run the API without installing SQL Server. From `FoodOrdersApi`:
+On this Linux development machine, the Development environment uses SQLite so the API can run without SQL Server. The base `appsettings.json` remains configured for SQL Server; SQLite is selected only by `appsettings.Development.json`. From `FoodOrdersApi`:
 
 ```bash
 dotnet restore
@@ -61,14 +61,14 @@ dotnet run --launch-profile https
 
 On first launch, the API creates `foodorders.dev.db` in the API project directory. This local database is ignored by git. Swagger is available at `https://localhost:7157/swagger`.
 
-In Development with SQLite, the API also adds sample restaurants and meals, a demo organization/user, and a demo account with a saved address. Seeding is repeatable and does not overwrite existing records. Sign in to the Flutter app with:
+In Development, the API initializes SQLite with `EnsureCreated` or applies pending SQL Server migrations. It adds the sample restaurants and meals, demo organization/user, and test accounts only when the selected database contains no data; existing databases are left untouched. Test credentials:
 
-- Username: `demo.user`
-- Password: `Demo1234!`
+- Customer: `demo.user` / `Demo1234!`
+- Administrator: `administrator` / `Admin1234!`
 
-These credentials are for local development only.
+These credentials and seeded accounts are for local Development only. To run Development against SQL Server without changing the SQLite default in `appsettings.Development.json`, set `DatabaseProvider=SqlServer` and `ConnectionStrings__DataBaseConnection` in the environment before starting the API.
 
-To use SQL Server instead, set `DatabaseProvider` to `SqlServer` and configure `ConnectionStrings:DataBaseConnection` in `appsettings.Development.json`. Restore the local EF tool and apply migrations before starting the API:
+For an explicit SQL Server migration outside Development, restore the local EF tool and apply migrations:
 
 ```bash
 dotnet tool restore
@@ -90,6 +90,15 @@ Authenticated account settings and saved-location endpoints are available to the
 - `DELETE` `api/address/{id}` — remove a saved location
 
 Saved addresses belong to the authenticated account. Checkout copies the chosen address into the order's delivery details so later edits to a saved location do not change an existing order.
+
+### Administrator reports API
+
+The administrator app can load submitted order reports and ratings using:
+
+- `GET` `api/admin/reports` — list reports with order, customer, meal, and restaurant details
+- `GET` `api/admin/ratings` — list ratings with order, customer, and total details
+
+These endpoints require authentication as the `administrator` account.
 
 ### Flutter customer app (Android emulator)
 

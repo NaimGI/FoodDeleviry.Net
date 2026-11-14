@@ -22,6 +22,61 @@ public sealed class FeatureController : ControllerBase
     private bool IsCurrentAccount(int accountId) =>
         int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentAccountId) && currentAccountId == accountId;
 
+    private bool IsAdministrator() =>
+        string.Equals(
+            User.FindFirstValue(ClaimTypes.Name),
+            "administrator",
+            StringComparison.OrdinalIgnoreCase);
+
+    [HttpGet("api/admin/reports")]
+    public ActionResult GetAdminReports()
+    {
+        if (!IsAdministrator()) return Forbid();
+
+        var reports = _context.Reports
+            .OrderByDescending(report => report.CreatedAt)
+            .Select(report => new
+            {
+                report.Id,
+                Type = report.Type.ToString(),
+                report.Description,
+                Status = report.Status.ToString(),
+                report.CreatedAt,
+                report.OrderId,
+                OrderUser = report.Order.Account.Login,
+                report.MealId,
+                MealName = report.Meal == null ? null : report.Meal.Name,
+                report.RestaurantId,
+                RestaurantName = report.Restaurant == null ? null : report.Restaurant.Name,
+                report.AccountId
+            })
+            .ToList();
+
+        return Ok(reports);
+    }
+
+    [HttpGet("api/admin/ratings")]
+    public ActionResult GetAdminRatings()
+    {
+        if (!IsAdministrator()) return Forbid();
+
+        var ratings = _context.OrderRatings
+            .OrderByDescending(rating => rating.CreatedAt)
+            .Select(rating => new
+            {
+                rating.Id,
+                rating.OrderId,
+                rating.Score,
+                rating.Comment,
+                rating.CreatedAt,
+                OrderUser = rating.Order.Account.Login,
+                TotalPrice = rating.Order.TotalPrice
+            })
+            .ToList();
+
+        return Ok(ratings);
+    }
+
     [HttpPost("api/calories/estimate")]
     public ActionResult<CalorieEstimateDto> EstimateCalories(CalorieEstimateRequest request) => Ok(_calories.Estimate(request.Name, request.Description));
 

@@ -111,12 +111,19 @@ namespace FoodOrdersApi
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment() &&
-                string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+            if (app.Environment.IsDevelopment())
             {
                 using var scope = app.Services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.EnsureCreated();
+                if (string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+                {
+                    dbContext.Database.EnsureCreated();
+                }
+                else if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+                {
+                    dbContext.Database.Migrate();
+                }
+
                 var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Account>>();
                 DevelopmentDataSeeder.Seed(dbContext, passwordHasher);
             }

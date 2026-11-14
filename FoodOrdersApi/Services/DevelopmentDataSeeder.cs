@@ -8,10 +8,17 @@ namespace FoodOrdersApi.Services
     {
         private const string DemoLogin = "demo.user";
         private const string DemoPassword = "Demo1234!";
+        private const string AdminLogin = "administrator";
+        private const string AdminPassword = "Admin1234!";
         private const string DemoOrganizationName = "Demo Organization";
 
         public static void Seed(AppDbContext context, IPasswordHasher<Account> passwordHasher)
         {
+            if (!IsDatabaseEmpty(context))
+            {
+                return;
+            }
+
             var organization = context.Organizations
                 .FirstOrDefault(item => item.Name == DemoOrganizationName);
             if (organization is null)
@@ -85,14 +92,8 @@ namespace FoodOrdersApi.Services
                 }
             }
 
-            var account = context.Accounts.FirstOrDefault(item => item.Login == DemoLogin);
-            if (account is null)
-            {
-                account = new Account { Login = DemoLogin };
-                account.HashedPassword = passwordHasher.HashPassword(account, DemoPassword);
-                context.Accounts.Add(account);
-                context.SaveChanges();
-            }
+            var account = EnsureAccount(context, passwordHasher, DemoLogin, DemoPassword);
+            EnsureAccount(context, passwordHasher, AdminLogin, AdminPassword);
 
             if (!context.Addresses.Any(address =>
                     address.AccountId == account.Id &&
@@ -111,6 +112,41 @@ namespace FoodOrdersApi.Services
             }
 
             context.SaveChanges();
+        }
+
+        private static bool IsDatabaseEmpty(AppDbContext context) =>
+            !context.Accounts.Any() &&
+            !context.Restaurants.Any() &&
+            !context.Meals.Any() &&
+            !context.MealOrder.Any() &&
+            !context.Carts.Any() &&
+            !context.Orders.Any() &&
+            !context.Users.Any() &&
+            !context.Organizations.Any() &&
+            !context.Addresses.Any() &&
+            !context.MealCalories.Any() &&
+            !context.DeliveryPricings.Any() &&
+            !context.OrderRatings.Any() &&
+            !context.Reports.Any() &&
+            !context.AppNotifications.Any();
+
+        private static Account EnsureAccount(
+            AppDbContext context,
+            IPasswordHasher<Account> passwordHasher,
+            string login,
+            string password)
+        {
+            var account = context.Accounts.FirstOrDefault(item => item.Login == login);
+            if (account is not null)
+            {
+                return account;
+            }
+
+            account = new Account { Login = login };
+            account.HashedPassword = passwordHasher.HashPassword(account, password);
+            context.Accounts.Add(account);
+            context.SaveChanges();
+            return account;
         }
     }
 }
