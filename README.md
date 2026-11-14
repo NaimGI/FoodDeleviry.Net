@@ -11,6 +11,7 @@ The project demonstrates a complete React and ASP.NET Core application with conn
 - Restaurant and meal management
 - Shared carts with meal quantities and calculated prices
 - Order creation, editing and tracking
+- Multiple saved account delivery locations, default selection, and profile settings in the Flutter app
 - Paginated, sortable and filterable data views
 - Swagger documentation for the REST API
 
@@ -42,33 +43,77 @@ FoodOrdersApi/   ASP.NET Core REST API
 
 ## Local development
 
-The project currently runs locally and does not have a hosted production deployment.
+The project currently runs locally and does not have a hosted production deployment. The Flutter customer app is in the sibling [`FlutterFood`](../FlutterFood) folder.
 
 ### Requirements
 
 - .NET 8 SDK
 - Node.js and npm
-- SQL Server or SQL Server LocalDB
 
 ### Backend
 
-1. Update `FoodOrdersApi/appsettings.json` if your SQL Server connection differs from the included LocalDB configuration.
-2. From `FoodOrdersApi`, restore the local tools and apply the database migrations:
+On this Linux development machine, the Development environment uses SQLite so the API can run without SQL Server. The base `appsettings.json` remains configured for SQL Server; SQLite is selected only by `appsettings.Development.json`. From `FoodOrdersApi`:
 
-   ```bash
-   dotnet tool restore
-   dotnet ef database update
-   ```
+```bash
+dotnet restore
+dotnet run --launch-profile https
+```
 
-3. Start the API:
+On first launch, the API creates `foodorders.dev.db` in the API project directory. This local database is ignored by git. Swagger is available at `https://localhost:7157/swagger`.
 
-   ```bash
-   dotnet run
-   ```
+In Development, the API initializes SQLite with `EnsureCreated` or applies pending SQL Server migrations. It adds the sample restaurants and meals, demo organization/user, and test accounts only when the selected database contains no data; existing databases are left untouched. Test credentials:
 
-For local development, `appsettings.Development.json` contains an explicitly non-production JWT signing key. Configure `Authentication__JwtKey` with a secure secret before using the API outside a local development environment.
+- Customer: `demo.user` / `Demo1234!`
+- Administrator: `administrator` / `Admin1234!`
 
-### Frontend
+These credentials and seeded accounts are for local Development only. To run Development against SQL Server without changing the SQLite default in `appsettings.Development.json`, set `DatabaseProvider=SqlServer` and `ConnectionStrings__DataBaseConnection` in the environment before starting the API.
+
+For an explicit SQL Server migration outside Development, restore the local EF tool and apply migrations:
+
+```bash
+dotnet tool restore
+dotnet ef database update
+dotnet run --launch-profile https
+```
+
+The local development JWT key is only for local testing; configure a secure `Authentication__JwtKey` before deploying anywhere.
+
+### Account and location API
+
+Authenticated account settings and saved-location endpoints are available to the Flutter app:
+
+- `GET` / `PUT` `api/account/profile` — view or update the signed-in account username; the profile response includes `totalSpent`, the sum of that account's order totals
+- `PUT` `api/account/password` — change the signed-in account password
+- `GET` `api/address/mine` and `POST` `api/address` — list or add saved delivery locations
+- `PUT` `api/address/{id}` — edit a saved location
+- `PUT` `api/address/{id}/default` — select the default location
+- `DELETE` `api/address/{id}` — remove a saved location
+
+Saved addresses belong to the authenticated account. Checkout copies the chosen address into the order's delivery details so later edits to a saved location do not change an existing order.
+
+### Administrator reports API
+
+The administrator app can load submitted order reports and ratings using:
+
+- `GET` `api/admin/reports` — list reports with order, customer, meal, and restaurant details
+- `GET` `api/admin/ratings` — list ratings with order, customer, and total details
+
+These endpoints require authentication as the `administrator` account.
+
+### Flutter customer app (Android emulator)
+
+Install Flutter, Android Studio/Android SDK, and Java 17 or newer. Start an Android emulator, then from `FlutterFood`:
+
+```bash
+flutter doctor
+flutter doctor --android-licenses
+flutter pub get
+flutter run
+```
+
+Start the backend first. The Flutter app connects to the host computer through `https://10.0.2.2:7157` when running in the Android emulator. A physical device requires a host address reachable from the device and a corresponding change in `FlutterFood/lib/core/api_constants.dart`.
+
+### React web app (optional)
 
 From `FoodOrdersApp`, install the dependencies and start the development server:
 

@@ -51,6 +51,9 @@ namespace FoodOrdersApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AccountId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Building")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -63,6 +66,13 @@ namespace FoodOrdersApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Premises")
                         .HasColumnType("nvarchar(max)");
 
@@ -71,6 +81,8 @@ namespace FoodOrdersApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
 
                     b.ToTable("Addresses");
                 });
@@ -483,6 +495,16 @@ namespace FoodOrdersApi.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Address", b =>
+                {
+                    b.HasOne("FoodOrdersApi.Entities.Objects.Account", "Account")
+                        .WithMany("Addresses")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.AppNotification", b =>
                 {
                     b.HasOne("FoodOrdersApi.Entities.Objects.Account", "DstAccount")
@@ -678,6 +700,8 @@ namespace FoodOrdersApi.Migrations
 
             modelBuilder.Entity("FoodOrdersApi.Entities.Objects.Account", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("Carts");
 
                     b.Navigation("Orders");

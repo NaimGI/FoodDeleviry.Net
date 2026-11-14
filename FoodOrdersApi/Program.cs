@@ -34,7 +34,23 @@ namespace FoodOrdersApi
 
             // Add services to the container.
 
-            builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("DataBaseConnection")));
+            var databaseProvider = configuration["DatabaseProvider"] ?? "SqlServer";
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                var connectionString = configuration.GetConnectionString("DataBaseConnection");
+                switch (databaseProvider.ToLowerInvariant())
+                {
+                    case "sqlite":
+                        options.UseSqlite(connectionString);
+                        break;
+                    case "sqlserver":
+                        options.UseSqlServer(connectionString);
+                        break;
+                    default:
+                        throw new InvalidOperationException(
+                            "DatabaseProvider must be configured as 'SqlServer' or 'Sqlite'.");
+                }
+            });
 
             builder.Services.AddCors(options =>
             {
@@ -94,6 +110,23 @@ namespace FoodOrdersApi
             builder.Services.AddScoped<ICalorieEstimatorService, CalorieEstimatorService>();
 
             var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                using var scope = app.Services.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+                {
+                    dbContext.Database.EnsureCreated();
+                }
+                else if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+                {
+                    dbContext.Database.Migrate();
+                }
+
+                var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Account>>();
+                DevelopmentDataSeeder.Seed(dbContext, passwordHasher);
+            }
 
             app.UseCors("FrontEndClient");
 

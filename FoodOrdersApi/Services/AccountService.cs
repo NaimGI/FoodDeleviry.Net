@@ -18,6 +18,9 @@ namespace FoodOrdersApi.Services
     {
         void Register(RegisterDto dto);
         string GenerateToken(LoginDto dto, HttpContext httpContext);
+        AccountProfileDto? GetProfile(int accountId);
+        AccountProfileDto? UpdateProfile(int accountId, UpdateProfileDto dto);
+        bool ChangePassword(int accountId, ChangePasswordDto dto);
     }
 
     public class AccountService : IAccountService
@@ -94,6 +97,74 @@ namespace FoodOrdersApi.Services
             });
 
             return tokenString;
+        }
+
+        public AccountProfileDto? GetProfile(int accountId)
+        {
+            var account = _context.Accounts.FirstOrDefault(a => a.Id == accountId);
+            return account == null
+                ? null
+                : new AccountProfileDto
+                {
+                    Id = account.Id,
+                    Login = account.Login,
+                    TotalSpent = GetTotalSpent(accountId)
+                };
+        }
+
+        public AccountProfileDto? UpdateProfile(int accountId, UpdateProfileDto dto)
+        {
+            var account = _context.Accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account == null) return null;
+
+            var login = dto.Login.Trim();
+            if (login.Length < 6)
+            {
+                throw new BadRequestException("Username must be at least 6 characters");
+            }
+
+            if (string.Equals(account.Login, "administrator", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(login, "administrator", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BadRequestException("The administrator username cannot be changed or reused");
+            }
+
+            if (_context.Accounts.Any(a =>
+                    a.Id != accountId && a.Login.ToLower() == login.ToLower()))
+            {
+                throw new BadRequestException("That username is already in use");
+            }
+
+            account.Login = login;
+            _context.SaveChanges();
+            return new AccountProfileDto
+            {
+                Id = account.Id,
+                Login = account.Login,
+                TotalSpent = GetTotalSpent(accountId)
+            };
+        }
+
+        private double GetTotalSpent(int accountId) =>
+            _context.Orders
+                .Where(order => order.AccountId == accountId)
+                .Sum(order => (double?)order.TotalPrice) ?? 0;
+
+        public bool ChangePassword(int accountId, ChangePasswordDto dto)
+        {
+            var account = _context.Accounts.FirstOrDefault(a => a.Id == accountId);
+            if (account == null) return false;
+
+            var verification = _passwordHasher.VerifyHashedPassword(
+                account, account.HashedPassword, dto.CurrentPassword);
+            if (verification == PasswordVerificationResult.Failed)
+            {
+                throw new BadRequestException("Current password is incorrect");
+            }
+
+            account.HashedPassword = _passwordHasher.HashPassword(account, dto.NewPassword);
+            _context.SaveChanges();
+            return true;
         }
     }
 }
